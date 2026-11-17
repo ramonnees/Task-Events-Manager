@@ -1,7 +1,10 @@
-"""Menu no terminal para gerenciar tarefas e eventos.
+"""Gerenciador de tarefas e eventos.
 
-Execute com:  python main.py
+    python main.py              abre a janela
+    python main.py --terminal   abre o menu no terminal
 """
+import sys
+
 from app.database import criar_conexao, criar_tabelas
 from app.models import (
     Evento,
@@ -10,6 +13,7 @@ from app.models import (
     normalizar_data,
     normalizar_hora,
 )
+from app.gui.janela import JanelaPrincipal
 from app.repositories import EventoRepository, TarefaRepository
 
 MENU = """
@@ -183,7 +187,7 @@ def remover_evento(repo, entrada=input):
 
 # ---------- Programa principal ----------
 
-def main():
+def main_terminal():
     conexao = criar_conexao()
     criar_tabelas(conexao)
     tarefas = TarefaRepository(conexao)
@@ -216,6 +220,22 @@ def main():
     finally:
         conexao.close()
     print("Até mais!")
+
+
+def main_janela():
+    conexao = criar_conexao()
+    criar_tabelas(conexao)
+    try:
+        JanelaPrincipal(conexao).mainloop()
+    finally:
+        conexao.close()
+
+
+def main():
+    if "--terminal" in sys.argv:
+        main_terminal()
+    else:
+        main_janela()
 
 
 if __name__ == "__main__":
