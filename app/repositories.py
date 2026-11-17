@@ -29,6 +29,22 @@ class TarefaRepository:
         linhas = self.conexao.execute("SELECT * FROM tarefas ORDER BY data, id").fetchall()
         return [self._para_objeto(l) for l in linhas]
 
+    def listar_por_periodo(self, inicio, fim):
+        """Tarefas com data entre inicio e fim (AAAA-MM-DD, inclusive)."""
+        linhas = self.conexao.execute(
+            "SELECT * FROM tarefas WHERE data BETWEEN ? AND ? ORDER BY data, id",
+            (inicio, fim),
+        ).fetchall()
+        return [self._para_objeto(l) for l in linhas]
+
+    def listar_atrasadas(self, hoje):
+        """Tarefas não feitas com data anterior a hoje (AAAA-MM-DD)."""
+        linhas = self.conexao.execute(
+            "SELECT * FROM tarefas WHERE feito = 0 AND data < ? ORDER BY data, id",
+            (hoje,),
+        ).fetchall()
+        return [self._para_objeto(l) for l in linhas]
+
     def buscar_por_id(self, id):
         linha = self.conexao.execute("SELECT * FROM tarefas WHERE id = ?", (id,)).fetchone()
         return self._para_objeto(linha) if linha else None
@@ -70,6 +86,14 @@ class EventoRepository:
 
     def listar(self):
         linhas = self.conexao.execute("SELECT * FROM eventos ORDER BY data, hora, id").fetchall()
+        return [self._para_objeto(l) for l in linhas]
+
+    def listar_por_periodo(self, inicio, fim):
+        """Eventos com data entre inicio e fim (AAAA-MM-DD, inclusive)."""
+        linhas = self.conexao.execute(
+            "SELECT * FROM eventos WHERE data BETWEEN ? AND ? ORDER BY data, hora, id",
+            (inicio, fim),
+        ).fetchall()
         return [self._para_objeto(l) for l in linhas]
 
     def buscar_por_id(self, id):

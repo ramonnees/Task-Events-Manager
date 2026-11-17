@@ -74,3 +74,25 @@ def test_atualizar_evento(eventos):
     assert eventos.atualizar(e) is True
     lido = eventos.buscar_por_id(e.id)
     assert (lido.hora, lido.feito) == ("15:00", True)
+
+
+def test_tarefas_listar_por_periodo_inclui_limites(tarefas):
+    for d in ["2026-11-16", "2026-11-17", "2026-11-20", "2026-11-21"]:
+        tarefas.adicionar(Tarefa(d, d))
+    datas = [t.data for t in tarefas.listar_por_periodo("2026-11-17", "2026-11-20")]
+    assert datas == ["2026-11-17", "2026-11-20"]
+
+
+def test_listar_atrasadas_ignora_feitas_e_hoje(tarefas):
+    tarefas.adicionar(Tarefa("velha", "2026-11-15"))
+    tarefas.adicionar(Tarefa("feita", "2026-11-15", feito=True))
+    tarefas.adicionar(Tarefa("hoje", "2026-11-17"))
+    assert [t.nome for t in tarefas.listar_atrasadas("2026-11-17")] == ["velha"]
+
+
+def test_eventos_listar_por_periodo_ordena_por_hora(eventos):
+    eventos.adicionar(Evento("tarde", "2026-11-17", "15:00"))
+    eventos.adicionar(Evento("manha", "2026-11-17", "09:00"))
+    eventos.adicionar(Evento("fora", "2026-11-25", "09:00"))
+    nomes = [e.nome for e in eventos.listar_por_periodo("2026-11-17", "2026-11-20")]
+    assert nomes == ["manha", "tarde"]
