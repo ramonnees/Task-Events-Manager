@@ -53,8 +53,13 @@ def dias_com_atividades(tarefas_repo, eventos_repo, ano, mes):
     """Datas do mês que têm pelo menos uma tarefa ou evento."""
     inicio = date(ano, mes, 1)
     fim = date(ano, mes, calendar.monthrange(ano, mes)[1])
-    return {date.fromisoformat(a.data)
-            for a in _no_periodo(tarefas_repo, eventos_repo, inicio, fim)}
+    dias = set()
+    for atividade in _no_periodo(tarefas_repo, eventos_repo, inicio, fim):
+        try:
+            dias.add(date.fromisoformat(atividade.data))
+        except ValueError:   # dado antigo fora do formato: não destaca, mas não quebra
+            continue
+    return dias
 
 
 def semanas_do_mes(ano, mes):

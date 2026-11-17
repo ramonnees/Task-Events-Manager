@@ -11,6 +11,7 @@ from app.models import Tarefa
 from app.repositories import EventoRepository, TarefaRepository
 
 DICA = "Espaço: marcar/desmarcar  ·  Duplo clique: editar  ·  Delete: remover"
+VERIFICAR_DIA_MS = 60_000   # confere a cada minuto se o dia virou
 
 
 class JanelaPrincipal(tk.Tk):
@@ -50,11 +51,30 @@ class JanelaPrincipal(tk.Tk):
 
         self.atualizar_tudo()
 
+        # Se o app ficar aberto de um dia para o outro, a aba Hoje precisa acompanhar.
+        self.notebook.bind("<<NotebookTabChanged>>", lambda _e: self.verificar_dia())
+        self.bind("<FocusIn>", lambda _e: self.verificar_dia())
+        self._timer = self.after(VERIFICAR_DIA_MS, self._verificar_dia_periodicamente)
+
     # ---------- atualização ----------
 
     def atualizar_tudo(self):
+        self._dia_mostrado = self.hoje()
         for aba in (self.aba_hoje, self.aba_calendario, self.aba_todas):
             aba.atualizar()
+
+    def verificar_dia(self):
+        """Atualiza tudo se o dia mudou desde a última atualização (passou da meia-noite)."""
+        if self.hoje() != self._dia_mostrado:
+            self.atualizar_tudo()
+
+    def _verificar_dia_periodicamente(self):
+        self.verificar_dia()
+        self._timer = self.after(VERIFICAR_DIA_MS, self._verificar_dia_periodicamente)
+
+    def destroy(self):
+        self.after_cancel(self._timer)
+        super().destroy()
 
     # ---------- ações ----------
 
@@ -79,15 +99,15 @@ class JanelaPrincipal(tk.Tk):
         self.atualizar_tudo()
 
     def nova(self, tipo, dia):
-        FormularioAtividade(self, tipo, dia, ao_salvar=self._salvar)
+        return FormularioAtividade(self, tipo, dia, ao_salvar=self._salvar)
 
     def editar(self, chave):
         atividade = self.buscar(chave)
         if atividade is None:
-            return
+            return None
         tipo = "tarefa" if isinstance(atividade, Tarefa) else "evento"
-        FormularioAtividade(self, tipo, date.fromisoformat(atividade.data),
-                            original=atividade, ao_salvar=self._salvar)
+        return FormularioAtividade(self, tipo, self.hoje(), original=atividade,
+                                   ao_salvar=self._salvar)
 
     def alternar_feito(self, chave):
         atividade = self.buscar(chave)

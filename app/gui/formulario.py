@@ -58,8 +58,7 @@ class FormularioAtividade(tk.Toplevel):
         corpo.grid(sticky="nsew")
 
         self.nome = tk.StringVar(value=original.nome if original else "")
-        data_iso = original.data if original else data_inicial.isoformat()
-        self.data = tk.StringVar(value=formatar_data_br(data_iso))
+        self.data = tk.StringVar(value=self._data_para_campo(original, data_inicial))
 
         linha = self._campo(corpo, 0, "Nome:", self.nome, largura=32)
         self._campo(corpo, 1, "Data (DD/MM/AAAA):", self.data, largura=12)
@@ -83,6 +82,15 @@ class FormularioAtividade(tk.Toplevel):
         self.bind("<Escape>", lambda _e: self.destroy())
         linha.focus_set()
         self.grab_set()
+
+    @staticmethod
+    def _data_para_campo(original, data_inicial):
+        if original is None:
+            return formatar_data_br(data_inicial.isoformat())
+        try:
+            return formatar_data_br(original.data)
+        except ValueError:   # dado antigo fora do formato: mostra como está para consertar
+            return original.data
 
     @staticmethod
     def _campo(pai, linha, rotulo, variavel, largura):

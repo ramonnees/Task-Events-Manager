@@ -75,3 +75,10 @@ def test_atividades_do_dia_e_todas(tarefas, eventos):
     tarefas.adicionar(Tarefa("outra", "2026-11-18"))
     assert [a.nome for a in atividades_do_dia(tarefas, eventos, HOJE)] == ["estudar", "reuniao"]
     assert [a.nome for a in todas_atividades(tarefas, eventos)] == ["estudar", "reuniao", "outra"]
+
+
+def test_dias_com_atividades_ignora_data_malformada_no_banco(tarefas, eventos):
+    # dado antigo, gravado antes da validação existir
+    tarefas.conexao.execute("INSERT INTO tarefas (nome, data) VALUES ('velha', '2026-11-1')")
+    tarefas.adicionar(Tarefa("ok", "2026-11-17"))
+    assert dias_com_atividades(tarefas, eventos, 2026, 11) == {date(2026, 11, 17)}
